@@ -9,7 +9,6 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from eva4models import Net
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -75,10 +74,7 @@ class ResNet(Net):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-
-        #self.gap = nn.AvgPool2d(kernel_size=(4,4)) 
-        self.conv10 = self.create_conv2d(512, 10, kernel_size=(1,1), padding=0, bn=False, relu=False) # IN: 512 OUT:10
-        #self.linear = nn.Linear(512*block.expansion, num_classes)
+        self.conv2 = nn.Conv2d(512, 10, kernel_size=1, stride=0, padding=0, bias=False)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -95,11 +91,7 @@ class ResNet(Net):
         out = self.layer3(out)
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
-        #out = out.view(out.size(0), -1)
-        #out = self.linear(out)
-        #out = self.gap(out)
-        out = self.conv10(out)
-
+        out = self.conv2(out)
         out = out.view(-1, 10)
         return F.log_softmax(out, dim=-1)
 
